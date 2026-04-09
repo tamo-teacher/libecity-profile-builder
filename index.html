@@ -472,14 +472,12 @@ function renderWelcome() {
                 <pre id="claudePrompt" style="font-size:11px;background:white;border-radius:6px;padding:10px;white-space:pre-wrap;word-break:break-all;color:#333;margin-bottom:8px;line-height:1.6">mcp__Claude_in_Chrome__navigate と mcp__Claude_in_Chrome__javascript_tool を使って、以下の手順を実行してください。
 
 1. https://libecity.com/mypage/edit_profile_detail を開く
-2. そのページで以下のJavaScriptを実行してデータを取得する：
-const d = {};
-document.querySelectorAll('textarea').forEach((el,i)=>{ if(el.value) d['t'+i]=el.value; });
-JSON.stringify(d)
+2. そのページで以下のJavaScriptを実行し、結果の文字列をコピーする：
+(function(){ const d={}; document.querySelectorAll('textarea').forEach((el,i)=>{ if(el.value) d['t'+i]=el.value; }); return btoa(encodeURIComponent(JSON.stringify(d))); })()
 
 3. https://tamo-teacher.github.io/libecity-profile-builder/ を新しいタブで開く
-4. そのタブで以下のJavaScriptを実行してデータを注入する（手順2で取得したデータを使う）：
-window.importLibecityData(/* 手順2のJSONをここに */)</pre>
+4. そのタブで以下のJavaScriptを実行する（手順2の結果文字列を貼り付ける）：
+window.importLibecityData('手順2の結果文字列をここに')</pre>
                 <button onclick="(function(b){const t=document.getElementById('claudePrompt').textContent;function ok(){b.textContent='✅ コピーしました！';setTimeout(()=>b.textContent='📋 コピーする',2000)}if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(ok).catch(fb)}else{fb()}function fb(){const ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');ok()}catch(e){}document.body.removeChild(ta)}})(this)" style="width:100%;padding:8px;background:var(--primary);color:white;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">📋 コピーする</button>
               </div>
               <div style="font-size:12px;color:var(--text-muted);line-height:2;text-align:left">
@@ -726,9 +724,17 @@ function escHtml(s) {
 function escAttr(s) { return String(s || '').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
 // ====== 外部からのデータ注入用グローバル関数 ======
+// raw: オブジェクト or Base64エンコードされたJSON文字列
 window.importLibecityData = function(raw) {
-  data = mapLibecityData(raw);
-  renderImportSuccess(raw);
+  try {
+    if (typeof raw === 'string') {
+      raw = JSON.parse(decodeURIComponent(atob(raw)));
+    }
+    data = mapLibecityData(raw);
+    renderImportSuccess(raw);
+  } catch(e) {
+    alert('データの取り込みに失敗しました。もう一度お試しください。\n' + e.message);
+  }
 };
 
 // ====== INIT ======
