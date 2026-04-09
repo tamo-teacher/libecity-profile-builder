@@ -435,7 +435,7 @@ const BOOKMARKLET_CODE = `javascript:(function(){
   document.querySelectorAll('textarea').forEach(function(el,i){d['t'+i]=el.value||'';});
   document.querySelectorAll('input[type="text"],input:not([type])').forEach(function(el,i){d['i'+i]=el.value||'';});
   var encoded=btoa(encodeURIComponent(JSON.stringify(d)));
-  window.open('${APP_ORIGIN}?libecity_import='+encoded,'_blank');
+  window.open('${APP_ORIGIN}#libecity_import='+encoded,'_blank');
 })();`;
 
 function renderWelcome() {
@@ -477,7 +477,7 @@ function renderWelcome() {
 const d = {};
 document.querySelectorAll('textarea').forEach((el,i)=>{ d['t'+i]=el.value||''; });
 const encoded = btoa(encodeURIComponent(JSON.stringify(d)));
-window.open('https://tamo-teacher.github.io/libecity-profile-builder/?libecity_import='+encoded,'_blank');</pre>
+window.open('https://tamo-teacher.github.io/libecity-profile-builder/#libecity_import='+encoded,'_blank');</pre>
                 <button onclick="(function(b){const t=document.getElementById('claudePrompt').textContent;function ok(){b.textContent='✅ コピーしました！';setTimeout(()=>b.textContent='📋 コピーする',2000)}if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(ok).catch(fb)}else{fb()}function fb(){const ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');ok()}catch(e){}document.body.removeChild(ta)}})(this)" style="width:100%;padding:8px;background:var(--primary);color:white;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">📋 コピーする</button>
               </div>
               <div style="font-size:12px;color:var(--text-muted);line-height:2;text-align:left">
@@ -726,7 +726,7 @@ function escAttr(s) { return String(s || '').replace(/"/g,'&quot;').replace(/'/g
 // ====== INIT ======
 (function() {
   // URLパラメータにlibecity_importがあれば自動取り込み
-  const params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(window.location.hash.slice(1));
   const importParam = params.get('libecity_import');
   if (importParam) {
     try {
