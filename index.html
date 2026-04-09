@@ -727,10 +727,16 @@ function escAttr(s) { return String(s || '').replace(/"/g,'&quot;').replace(/'/g
 
 // ====== 外部からのデータ注入用グローバル関数 ======
 // raw: オブジェクト or Base64エンコードされたJSON文字列
+window._pendingImport = null;
 window.importLibecityData = function(raw) {
   try {
     if (typeof raw === 'string') {
       raw = JSON.parse(decodeURIComponent(atob(raw)));
+    }
+    // 初期化前に呼ばれた場合はフラグに保存してINIT後に処理
+    if (!window._appReady) {
+      window._pendingImport = raw;
+      return;
     }
     data = mapLibecityData(raw);
     renderImportSuccess(raw);
@@ -758,6 +764,14 @@ window.importLibecityData = function(raw) {
     }
   }
   renderWelcome();
+  window._appReady = true;
+  // importLibecityData が先に呼ばれていた場合はここで処理
+  if (window._pendingImport) {
+    const raw = window._pendingImport;
+    window._pendingImport = null;
+    data = mapLibecityData(raw);
+    renderImportSuccess(raw);
+  }
 })();
 
 function renderImportSuccess(raw) {
