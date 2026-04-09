@@ -472,14 +472,11 @@ function renderWelcome() {
                 <pre id="claudePrompt" style="font-size:11px;background:white;border-radius:6px;padding:10px;white-space:pre-wrap;word-break:break-all;color:#333;margin-bottom:8px;line-height:1.6">mcp__Claude_in_Chrome__navigate と mcp__Claude_in_Chrome__javascript_tool を使って、以下の手順を実行してください。
 
 1. https://libecity.com/mypage/edit_profile_detail を開く
-2. そのページで以下のJavaScriptを実行してオブジェクトを取得する：
-(function(){ const d={}; document.querySelectorAll('textarea').forEach((el,i)=>{ if(el.value) d['t'+i]=el.value; }); return d; })()
+2. そのページで以下のJavaScriptを実行する：
+(function(){ const d={}; document.querySelectorAll('textarea').forEach((el,i)=>{ if(el.value) d['t'+i]=el.value; }); localStorage.setItem('libecity_import', JSON.stringify(d)); return '保存完了：' + Object.keys(d).length + '件'; })()
 
-3. https://tamo-teacher.github.io/libecity-profile-builder/ を新しいタブで開く
-4. そのタブで以下のJavaScriptを実行する（手順2で取得したオブジェクトをそのまま渡す）：
-window.importLibecityData( /* 手順2の結果オブジェクト */ )
-
-5. 手順4を実行したら、それ以上ページの操作や確認はしないでください。ページが自動更新されるので、ユーザーに「ページを確認してください」と伝えてください。</pre>
+3. https://tamo-teacher.github.io/libecity-profile-builder/ を新しいタブで開く（JavaScriptは実行不要。ページが自動でデータを読み込みます）
+4. ユーザーに「ページを確認してください」と伝える</pre>
                 <button onclick="(function(b){const t=document.getElementById('claudePrompt').textContent;function ok(){b.textContent='✅ コピーしました！';setTimeout(()=>b.textContent='📋 コピーする',2000)}if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(ok).catch(fb)}else{fb()}function fb(){const ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');ok()}catch(e){}document.body.removeChild(ta)}})(this)" style="width:100%;padding:8px;background:var(--primary);color:white;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">📋 コピーする</button>
               </div>
               <div style="font-size:12px;color:var(--text-muted);line-height:2;text-align:left">
@@ -747,16 +744,27 @@ window.importLibecityData = function(raw) {
 
 // ====== INIT ======
 (function() {
-  // URLパラメータにlibecity_importがあれば自動取り込み
+  // localStorageにlibecity_importがあれば自動取り込み（Claude in Chrome経由）
+  const stored = localStorage.getItem('libecity_import');
+  if (stored) {
+    localStorage.removeItem('libecity_import');
+    try {
+      const raw = JSON.parse(stored);
+      data = mapLibecityData(raw);
+      renderImportSuccess(raw);
+      return;
+    } catch(e) {
+      console.error('Import failed:', e);
+    }
+  }
+  // URLフラグメントにlibecity_importがあれば自動取り込み（旧方式）
   const params = new URLSearchParams(window.location.hash.slice(1));
   const importParam = params.get('libecity_import');
   if (importParam) {
     try {
       const raw = JSON.parse(decodeURIComponent(atob(importParam)));
       data = mapLibecityData(raw);
-      // URLをクリーンにしてからウィザードを起動
       history.replaceState({}, '', window.location.pathname);
-      // 取り込み成功のウェルカム表示を挟む
       renderImportSuccess(raw);
       return;
     } catch(e) {
@@ -764,14 +772,6 @@ window.importLibecityData = function(raw) {
     }
   }
   renderWelcome();
-  window._appReady = true;
-  // importLibecityData が先に呼ばれていた場合はここで処理
-  if (window._pendingImport) {
-    const raw = window._pendingImport;
-    window._pendingImport = null;
-    data = mapLibecityData(raw);
-    renderImportSuccess(raw);
-  }
 })();
 
 function renderImportSuccess(raw) {
