@@ -512,22 +512,21 @@ function startFresh() {
   launchWizard();
 }
 
+// <br>タグを改行に変換
+function cleanBr(s) {
+  if (!s) return s;
+  return s.replace(/<br\s*\/?>/gi, '\n').replace(/&lt;br\s*\/?&gt;/gi, '\n');
+}
+
 // リベシティからのデータをアプリのフィールドにマッピング
 function mapLibecityData(raw) {
   const d = {};
-  // Libecityのtextarea順番（edit_profile_detailページ）：
-  // t0: 自己紹介  t1: リベ大との出会い  t2: 挑戦・実践  t3: 趣味・特技
-  // t4: 好きな〇〇（1つ目）  t5: その他ご自由に
-  if (raw.t0) d.currentWork = raw.t0;          // 自己紹介 → 今やっていること欄へ
-  if (raw.t1) d.encounterTrigger = raw.t1;     // リベ大との出会い
-  if (raw.t2) {
-    // 挑戦・実践は長いので稼ぐ力欄へ（ユーザーが各力に振り分けられる）
-    d.earning = raw.t2;
-  }
-  if (raw.t3) d.hobbies = raw.t3;             // 趣味・特技
-  if (raw.t4) d.fav1Item = raw.t4;            // 好きな〇〇
-  if (raw.t5) d.otherMessage = raw.t5;        // その他ご自由に
-  // input fields: i0=出身地, i1=家族構成（現在のフィールドには対応なし）
+  if (raw.t0) d.currentWork = cleanBr(raw.t0);
+  if (raw.t1) d.encounterTrigger = cleanBr(raw.t1);
+  if (raw.t2) d.earning = cleanBr(raw.t2);
+  if (raw.t3) d.hobbies = cleanBr(raw.t3);
+  if (raw.t4) d.fav1Item = cleanBr(raw.t4);
+  if (raw.t5) d.otherMessage = cleanBr(raw.t5);
   return d;
 }
 
