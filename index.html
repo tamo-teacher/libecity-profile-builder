@@ -473,7 +473,7 @@ function renderWelcome() {
 
 1. mcp__Claude_in_Chrome__navigate で https://libecity.com/mypage/edit_profile_detail を開く
 2. mcp__Claude_in_Chrome__javascript_tool で以下を実行する（返り値は「移動します」のみ。エンコード文字列は返さない）：
-(function(){ const d={}; document.querySelectorAll('textarea').forEach((el,i)=>{ if(el.value) d['t'+i]=el.value; }); window.location.href='https://tamo-teacher.github.io/libecity-profile-builder/#libecity_import='+btoa(encodeURIComponent(JSON.stringify(d))); return 'プロフィールビルダーに移動します'; })()
+(function(){ const d={}; document.querySelectorAll('textarea').forEach((el,i)=>{ if(el.value) d['t'+i]=el.value.replace(/<br\s*\/?>/gi,'\n'); }); window.location.href='https://tamo-teacher.github.io/libecity-profile-builder/#libecity_import='+btoa(encodeURIComponent(JSON.stringify(d))); return 'プロフィールビルダーに移動します'; })()
 
 3. ユーザーに「ブラウザのタブを確認してください」と伝える</pre>
                 <button onclick="(function(b){const t=document.getElementById('claudePrompt').textContent;function ok(){b.textContent='✅ コピーしました！';setTimeout(()=>b.textContent='📋 コピーする',2000)}if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(ok).catch(fb)}else{fb()}function fb(){const ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');ok()}catch(e){}document.body.removeChild(ta)}})(this)" style="width:100%;padding:8px;background:var(--primary);color:white;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">📋 コピーする</button>
