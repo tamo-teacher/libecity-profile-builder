@@ -472,13 +472,10 @@ function renderWelcome() {
                 <pre id="claudePrompt" style="font-size:11px;background:white;border-radius:6px;padding:10px;white-space:pre-wrap;word-break:break-all;color:#333;margin-bottom:8px;line-height:1.6">mcp__Claude_in_Chrome__navigate と mcp__Claude_in_Chrome__javascript_tool を使って、以下の手順を実行してください。
 
 1. mcp__Claude_in_Chrome__navigate で https://libecity.com/mypage/edit_profile_detail を開く
-2. mcp__Claude_in_Chrome__javascript_tool で以下を実行してエンコード文字列を取得する：
-(function(){ const d={}; document.querySelectorAll('textarea').forEach((el,i)=>{ if(el.value) d['t'+i]=el.value; }); return btoa(encodeURIComponent(JSON.stringify(d))); })()
+2. mcp__Claude_in_Chrome__javascript_tool で以下を実行する（返り値は「移動します」のみ。エンコード文字列は返さない）：
+(function(){ const d={}; document.querySelectorAll('textarea').forEach((el,i)=>{ if(el.value) d['t'+i]=el.value; }); window.location.href='https://tamo-teacher.github.io/libecity-profile-builder/#libecity_import='+btoa(encodeURIComponent(JSON.stringify(d))); return 'プロフィールビルダーに移動します'; })()
 
-3. 手順2で返ってきた文字列を使って、mcp__Claude_in_Chrome__navigate で以下のURLに移動する：
-https://tamo-teacher.github.io/libecity-profile-builder/#libecity_import=【手順2の文字列】
-
-4. ユーザーに「ページを確認してください」と伝える</pre>
+3. ユーザーに「ブラウザのタブを確認してください」と伝える</pre>
                 <button onclick="(function(b){const t=document.getElementById('claudePrompt').textContent;function ok(){b.textContent='✅ コピーしました！';setTimeout(()=>b.textContent='📋 コピーする',2000)}if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(ok).catch(fb)}else{fb()}function fb(){const ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');ok()}catch(e){}document.body.removeChild(ta)}})(this)" style="width:100%;padding:8px;background:var(--primary);color:white;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">📋 コピーする</button>
               </div>
               <div style="font-size:12px;color:var(--text-muted);line-height:2;text-align:left">
