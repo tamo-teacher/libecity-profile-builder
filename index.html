@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>リベシティ プロフィールビルダー🦁</title>
+  <style>
+    :root {
+      --primary: #f97316;
+      --primary-dark: #ea580c;
+      --primary-light: #fff7ed;
+      --secondary: #fbbf24;
+      --text: #1c1917;
+      --text-muted: #78716c;
+      --border: #e7e5e4;
+      --bg: #fafaf9;
+      --success: #22c55e;
+      --radius: 12px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* HEADER */
+    .app-header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: white;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 12px rgba(249,115,22,0.3);
+    }
+    .app-header h1 { font-size: 18px; font-weight: 700; }
+    .app-header .subtitle { font-size: 12px; opacity: 0.9; }
+
+    /* PROGRESS */
+    .progress-wrap {
+      background: white;
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      position: sticky;
+      top: 58px;
+      z-index: 99;
+    }
+    .progress-bar-bg { background: var(--border); border-radius: 99px; height: 6px; }
+    .progress-bar-fill {
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      border-radius: 99px; height: 6px;
+      transition: width 0.4s ease;
+    }
+    .progress-text { display: flex; justify-content: space-between; margin-top: 6px; font-size: 12px; color: var(--text-muted); }
+    .step-dots { display: flex; gap: 5px; margin-top: 8px; flex-wrap: wrap; }
+    .step-dot {
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 600;
+      background: var(--border); color: var(--text-muted);
+      cursor: pointer; transition: all 0.2s; user-select: none;
+    }
+    .step-dot.active { background: var(--primary); color: white; }
+    .step-dot.done { background: var(--success); color: white; }
+
+    /* MAIN LAYOUT */
+    .main-layout { display: flex; max-width: 1100px; margin: 0 auto; }
+    .form-panel { flex: 1; padding: 28px 24px; min-width: 0; }
+
+    /* STEP CARD */
+    .step-card {
+      background: white; border-radius: var(--radius);
+      padding: 28px; box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      animation: slideIn 0.3s ease;
+    }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .step-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--primary-light); color: var(--primary-dark);
+      border-radius: 99px; padding: 4px 12px;
+      font-size: 12px; font-weight: 600; margin-bottom: 10px;
+    }
+    .step-title { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+    .step-desc { font-size: 14px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.6; }
+    .tip-box {
+      background: var(--primary-light); border-left: 4px solid var(--primary);
+      border-radius: 0 8px 8px 0; padding: 12px 16px;
+      margin-bottom: 24px; font-size: 13px; color: var(--primary-dark); line-height: 1.7;
+    }
+    .tip-box strong { display: block; margin-bottom: 4px; font-size: 12px; }
+
+    /* FIELDS */
+    .field-group { margin-bottom: 18px; }
+    .field-label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+    .field-optional { color: var(--text-muted); font-size: 11px; font-weight: normal; }
+    input[type="text"], textarea, select {
+      width: 100%; border: 1.5px solid var(--border); border-radius: 8px;
+      padding: 10px 14px; font-size: 14px; font-family: inherit;
+      color: var(--text); background: white; transition: border-color 0.2s; resize: vertical;
+    }
+    input[type="text"]:focus, textarea:focus, select:focus {
+      outline: none; border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(249,115,22,0.1);
+    }
+    textarea { line-height: 1.7; }
+    .char-count { text-align: right; font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+
+    /* BUTTONS */
+    .nav-buttons { display: flex; justify-content: space-between; align-items: center; margin-top: 28px; gap: 12px; }
+    .btn {
+      padding: 12px 28px; border-radius: 8px; font-size: 15px;
+      font-weight: 600; border: none; cursor: pointer;
+      transition: all 0.2s; font-family: inherit; white-space: nowrap;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white; box-shadow: 0 4px 12px rgba(249,115,22,0.3);
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(249,115,22,0.4); }
+    .btn-secondary { background: white; color: var(--text-muted); border: 1.5px solid var(--border); }
+    .btn-secondary:hover { border-color: var(--text-muted); color: var(--text); }
+    .btn-full { width: 100%; }
+
+    /* PREVIEW PANEL */
+    .preview-panel { width: 340px; flex-shrink: 0; padding: 28px 24px 28px 0; }
+    .preview-sticky { position: sticky; top: 140px; max-height: calc(100vh - 150px); overflow-y: auto; }
+    .preview-card {
+      background: white; border-radius: var(--radius);
+      box-shadow: var(--shadow); border: 1px solid var(--border); overflow: hidden;
+    }
+    .preview-header { background: #1c1917; padding: 12px 16px; color: white; font-size: 13px; font-weight: 600; }
+    .preview-sections { padding: 14px; }
+    .preview-section { margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+    .preview-section:last-child { border-bottom: none; margin-bottom: 0; }
+    .preview-section-title { font-size: 10px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 5px; }
+    .preview-text { font-size: 12px; line-height: 1.7; white-space: pre-wrap; }
+    .preview-empty { font-size: 12px; color: var(--text-muted); font-style: italic; }
+
+    /* WELCOME */
+    .welcome-hero { text-align: center; margin-bottom: 28px; }
+    .welcome-hero .lion { font-size: 56px; margin-bottom: 12px; }
+    .welcome-hero h2 { font-size: 26px; font-weight: 800; margin-bottom: 10px; line-height: 1.3; }
+    .welcome-hero p { font-size: 15px; color: var(--text-muted); line-height: 1.7; }
+    .welcome-options { display: flex; flex-direction: column; gap: 14px; }
+    .welcome-option {
+      background: white; border: 2px solid var(--border);
+      border-radius: var(--radius); padding: 20px;
+      cursor: pointer; transition: all 0.2s; text-align: left;
+    }
+    .welcome-option:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow); }
+    .welcome-option.featured { border-color: var(--primary); background: var(--primary-light); }
+    .welcome-option h3 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .welcome-option p { font-size: 13px; color: var(--text-muted); }
+    .paste-area { margin-top: 14px; }
+    .paste-area textarea { min-height: 160px; font-size: 13px; }
+
+    /* FINAL */
+    .output-section {
+      background: white; border-radius: var(--radius);
+      border: 1px solid var(--border); margin-bottom: 14px;
+      overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .output-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 16px; background: #f5f5f4; border-bottom: 1px solid var(--border);
+    }
+    .output-title { font-size: 14px; font-weight: 700; }
+    .btn-copy {
+      background: var(--primary); color: white; border: none;
+      border-radius: 6px; padding: 6px 14px; font-size: 12px;
+      font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s;
+    }
+    .btn-copy:hover { background: var(--primary-dark); }
+    .btn-copy.copied { background: var(--success); }
+    .output-text { padding: 14px 16px; font-size: 14px; line-height: 1.8; white-space: pre-wrap; }
+    .output-empty { padding: 14px 16px; font-size: 13px; color: var(--text-muted); font-style: italic; }
+    .final-actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 800px) {
+      .preview-panel { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="app-header">
+  <div style="font-size:24px">🦁</div>
+  <div>
+    <h1>リベシティ プロフィールビルダー</h1>
+    <div class="subtitle">質問に答えるだけで充実プロフィールが完成！</div>
+  </div>
+</header>
+
+<div id="progressWrap" class="progress-wrap hidden">
+  <div class="progress-bar-bg">
+    <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+  </div>
+  <div class="progress-text">
+    <span id="progressLabel">ステップ 1 / 8</span>
+    <span id="progressPct">0%</span>
+  </div>
+  <div class="step-dots" id="stepDots"></div>
+</div>
+
+<div id="mainLayout" class="main-layout">
+  <div id="formPanel" class="form-panel"></div>
+  <div id="previewPanel" class="preview-panel hidden">
+    <div class="preview-sticky">
+      <div class="preview-card">
+        <div class="preview-header">👁 リアルタイムプレビュー</div>
+        <div class="preview-sections" id="previewContent"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ====== STATE ======
+let currentStep = -1;
+let data = {};
+
+// 田中さんの既存データ（テスト版プリセット）
+const prefillData = {
+  goal: 'かっこいい大人になりたい。特別支援の子どもたちに「あの先生みたいになりたい」と思ってもらえる生き方をしたい。',
+  currentWork: '特別支援の先生をしながら、YouTube・TikTok・ブログで障害支援の情報発信中！ライバー・Vtuberとしても活動中です。',
+  challenges: '副業で安定した収益を積み上げて、より自由な働き方を実現したい。',
+  libecityGoal: 'オフ会でリベ友をたくさん作りたい！5つの力を加速させたい😊',
+  encounterTrigger: '2021年にIDECO・投資信託を始めた頃、学長の動画がおすすめに出てきました。言っていることが納得できて、どんどん動画にハマっていきました。',
+  whyJoined: 'あっちゃんのコラボ動画あたりから学長を信用し始め、リベシティも気になるように。「YouTubeのチャンネル登録者数が100人になったら入ろう！」という謎の自分ルールを達成して、2023年7月に入会しました！（出会ってから2年近くかかった😂）',
+  saving: '・車両保険の見直し（25,000円削減！）\n・不要クレジットカードを解約\n・ワイモバイルを日本通信SIMに変更',
+  investing: '・インデックス投資（2021年11月〜）\n・高配当株（2022年2月〜）',
+  earning: '・YouTube（2022年4月〜、2026年1月に収益化達成！登録者1000人突破🎉）\n・ブログ（2023年10月〜、初収益104円😂着実に積み上げ中）\n・Instagram・TikTok・X（2024年12月〜）\n・スキルマーケットで小論文添削を出品中',
+  futureGoals: '・金沢でオフ会を主催したい！\n・副業収益を安定させる\n・Vtuberとしての活動をもっと本格化させたい\n・簿記2級に挑戦！',
+  hobbies: '読書・勉強・スポーツ（汗をだらだらにかいた後でお風呂に入るのが最高に好き）',
+  skills: '継続すること',
+  fav1Type: '本',
+  fav1Item: 'ユダヤの聖典タルムードシリーズ',
+  fav1Why: '人生の知恵が詰まっていて、読むたびに新しい発見がある。謙虚さや商売の本質を教えてくれます。',
+  fav2Type: '言葉',
+  fav2Item: '具体的に動く（あいだみつを）',
+  fav2Why: 'がんばらなくていいから、具体的に動くことだね。この言葉に何度も背中を押されました。',
+  favContent: '原因自分論の動画',
+  whyContent: 'この動画のおかげで自分の言動を反省し、見直すことができました。以前は周りに不満を持つこともありましたが、「まず自分に原因がある」と考えるようになってから行動と人間関係が変わった気がします！',
+  nameOrigin: '「たも」は本名の田中直哉の「た」と「も」から。🌈は障害支援という仕事で大切にしている「多様性」と、多彩な活動（YouTube・ブログ・投資・副業など）を表しています。',
+  iconOrigin: '',
+  strengthFinder: '①学習欲 ②達成欲 ③親密性 ④着想 ⑤内省',
+  connectWith: '・副業・YouTube・ブログに挑戦している人\n・特別支援・障害支援に関わっている人\n・スポーツ好きな人\n・金沢・石川エリアの方',
+  favoriteChat: '',
+  otherMessage: '小論文添削でスキルマーケットオンラインに出品中です！\nhttps://skill.libecity.com/services/18291\n\nDMはいつでも大歓迎です😊お気軽にフォローしてください！',
+};
+
+// ====== STEPS ======
+const steps = [
+  {
+    id: 'intro', emoji: '🎯', title: '自己紹介',
+    badge: 'STEP 1 / 8',
+    desc: 'プロフィールの中で一番重要なセクション！読んだ人の心をつかむ4つの要素を入れましょう。',
+    tip: '自己紹介は「①夢・目標 ②今取り組んでいること ③悩み・課題 ④リベシティでやりたいこと」の4つを盛り込むのがおすすめ。やりたいことや悩みを書いておくと、反応してくれる人が現れますよ！',
+    fields: [
+      { key: 'goal', label: '🎯 あなたの夢・目標は？', type: 'textarea', placeholder: '例：会社に縛られず、自分らしい働き方で家族と毎年旅行したい！', rows: 2 },
+      { key: 'currentWork', label: '📌 今取り組んでいることは？', type: 'textarea', placeholder: '例：副業Webライターに挑戦中！文字単価1.5円以上の案件に絞って応募しています。', rows: 3 },
+      { key: 'challenges', label: '💭 今の悩み・課題', type: 'textarea', placeholder: '例：周りにリベ大を知っている人がいない…リベシティで同志を見つけたい！', rows: 2, optional: true },
+      { key: 'libecityGoal', label: '🤝 リベシティでやりたいことは？', type: 'textarea', placeholder: '例：オフ会でリベ友100人作りたい！投資仲間とワクワクする話をしたい！', rows: 2 },
+    ]
+  },
+  {
+    id: 'encounter', emoji: '📖', title: 'リベ大との出会い',
+    badge: 'STEP 2 / 8',
+    desc: 'どんな経緯でリベ大・リベシティに出会ったか、サクッと短く書きましょう！',
+    tip: 'ここはサクッと短くで十分です。「〇〇を解決したくて→〇〇で出会った→何に惹かれた→入会した」という流れが読みやすいです。',
+    fields: [
+      { key: 'encounterTrigger', label: '🔍 知ったきっかけは？', type: 'textarea', placeholder: '例：子どもの学費を調べているときに、友人から勧められてYouTubeを観はじめました。', rows: 3 },
+      { key: 'whyJoined', label: '✨ 何に惹かれてリベシティに入会した？', type: 'textarea', placeholder: '例：同じ悩みを持つ人たちと話し合えそうだと思ってリベシティにも入会しました。', rows: 3 },
+    ]
+  },
+  {
+    id: 'challenge', emoji: '🔥', title: '挑戦・実践していること',
+    badge: 'STEP 3 / 8',
+    desc: '5つの力ごとに、今やっていることを具体的に書きましょう。全部書かなくてOKです！',
+    tip: '夢を実現するためにやっていることを「行動レベル」で具体的に書くのがポイント。「株を勉強中」より「2022年から高配当株をコツコツ積み立て中！」の方が読み手に伝わります。',
+    fields: [
+      { key: 'saving', label: '💰 貯める力', type: 'textarea', placeholder: '例：格安SIM・保険の見直し、不要クレジットカードを解約', rows: 3, optional: true },
+      { key: 'investing', label: '📈 増やす力', type: 'textarea', placeholder: '例：インデックス投資（2021年〜）、高配当株（2022年〜）', rows: 3, optional: true },
+      { key: 'earning', label: '💪 稼ぐ力', type: 'textarea', placeholder: '例：副業ブログで先月初収益1,000円！コツコツ積み上げ中', rows: 3, optional: true },
+      { key: 'futureGoals', label: '🌟 これからやりたいこと！', type: 'textarea', placeholder: '例：オフ会を主催したい！月5万の副業収益を達成する！', rows: 3 },
+    ]
+  },
+  {
+    id: 'hobbies', emoji: '🎮', title: '趣味・特技',
+    badge: 'STEP 4 / 8',
+    desc: '趣味を書くと、同じ趣味の仲間と出会えます！推しがある人はぜひここで語ってください😍',
+    tip: 'バリバリ仕事で活躍している方も「意外とコレが好きなんだ👀」とほっこりしてもらえるところです。スキルだけでなく、人柄が伝わる内容を書きましょう。',
+    fields: [
+      { key: 'hobbies', label: '🎯 趣味は？', type: 'textarea', placeholder: '例：読書・筋トレ・ボードゲーム（週末は家族でよく遊びます！）', rows: 3 },
+      { key: 'skills', label: '✨ 特技は？', type: 'textarea', placeholder: '例：継続すること、人の話を聞くこと', rows: 2, optional: true },
+    ]
+  },
+  {
+    id: 'favorites', emoji: '❤️', title: '好きな〇〇',
+    badge: 'STEP 5 / 8',
+    desc: '好きなものとその「理由」を書くのがポイント。理由にあなたの人柄が表れます！',
+    tip: '「好きな本：ONE PIECE（ルフィが好き）」より「ONE PIECE（強い相手でも臆せず立ち向かうルフィが大好き！！）」の方が個性が伝わります。なぜ好きかの理由を書いてみましょう。',
+    fields: [
+      { key: 'fav1Type', label: '好きな〇〇（1つ目）のカテゴリ', type: 'select', options: ['本', '漫画', '映画', '音楽', '食べ物', '言葉', '時間', '場所', '国', 'スポーツ', '動物', 'アニメ', 'ゲーム', 'キャラクター', 'テレビ番組', 'その他'] },
+      { key: 'fav1Item', label: 'タイトル・名前', type: 'text', placeholder: '例：ONE PIECE、コーヒー、サウナ' },
+      { key: 'fav1Why', label: 'なぜ好き？（理由を書くと個性が出る！）', type: 'textarea', placeholder: '例：主人公の「折れない心」と仲間への信頼に感動。落ち込んだときに読むと元気をもらえます。', rows: 3 },
+      { key: 'fav2Type', label: '好きな〇〇（2つ目）のカテゴリ', type: 'select', options: ['選択なし', '本', '漫画', '映画', '音楽', '食べ物', '言葉', '時間', '場所', '国', 'スポーツ', '動物', 'アニメ', 'ゲーム', 'キャラクター', 'テレビ番組', 'その他'], optional: true },
+      { key: 'fav2Item', label: 'タイトル・名前（任意）', type: 'text', placeholder: '例：落語、コーヒー、３月のライオン', optional: true },
+      { key: 'fav2Why', label: 'なぜ好き？（任意）', type: 'textarea', placeholder: '例：蒸した後の外気浴がたまらない。週1でサウナに行くのが生きがいです。', rows: 2, optional: true },
+    ]
+  },
+  {
+    id: 'content', emoji: '🦁', title: 'イチオシのリベ大コンテンツ',
+    badge: 'STEP 6 / 8',
+    desc: '好きなコンテンツと「なぜ好きか」「どう変わったか」を書くと、あなたの価値観が伝わります。',
+    tip: 'コンテンツ名だけでなく、「それを見て自分がどう変わったか」のエピソードを添えると読んだ人の心に刺さります！',
+    fields: [
+      { key: 'favContent', label: '🎬 イチオシのリベ大コンテンツは？（動画・ブログなど）', type: 'text', placeholder: '例：原因自分論の動画、5つの力を解説した動画、お金にまつわる基本講座' },
+      { key: 'whyContent', label: 'なぜ好き？どう変わった？エピソードも書いてみよう！', type: 'textarea', placeholder: '例：この動画を見てから失敗しても「自分に原因がある」と考えるようになり、行動が大きく変わりました！', rows: 4 },
+    ]
+  },
+  {
+    id: 'about', emoji: '👤', title: 'あなたのことをもっと',
+    badge: 'STEP 7 / 8',
+    desc: 'リベネームやアイコンの由来は、オフ会でよく話題になります。書いておくと覚えてもらいやすい！',
+    tip: 'リベネームとアイコンの由来を書いておくと、オフ会のときに「名前の由来を教えてください！」という会話のきっかけになります。',
+    fields: [
+      { key: 'nameOrigin', label: '🏷 リベネームの由来', type: 'textarea', placeholder: '例：「たも」は本名の田中もとき の「た」と「も」から。🌈は多様な活動を表しています。', rows: 3, optional: true },
+      { key: 'iconOrigin', label: '🖼 アイコンの由来', type: 'textarea', placeholder: '例：チャッピー（AI）で作った似顔絵です。旅好きなので世界地図を背景に。', rows: 2, optional: true },
+      { key: 'strengthFinder', label: '🧠 ストレングスファインダー・その他診断結果', type: 'textarea', placeholder: '例：①学習欲 ②達成欲 ③親密性 ④着想 ⑤内省\n（MBTI：INTJ）', rows: 3, optional: true },
+    ]
+  },
+  {
+    id: 'other', emoji: '📣', title: 'その他・呼びかけ',
+    badge: 'STEP 8 / 8',
+    desc: 'こんな人と友達になりたい！という呼びかけや、伝えたいメッセージを書きましょう。',
+    tip: '「こんな人と友達になりたい」「DMください！」「〇〇チャットによくいます」などを書いておくと交流が生まれやすくなります！',
+    fields: [
+      { key: 'connectWith', label: '🤝 こんな人と友達になりたい！', type: 'textarea', placeholder: '例：副業に挑戦している人、子育て中のパパ・ママ、スポーツ好きな人', rows: 3 },
+      { key: 'favoriteChat', label: '💬 よくいるチャット・参加中のオフ会', type: 'textarea', placeholder: '例：稼ぐ力チャット、ブログ部、金沢エリアグループ', rows: 2, optional: true },
+      { key: 'otherMessage', label: '📝 その他、伝えたいこと・呼びかけ', type: 'textarea', placeholder: '例：DMはいつでも大歓迎です！お気軽にフォローしてください😊', rows: 3, optional: true },
+    ]
+  },
+];
+
+// ====== GENERATE PROFILE ======
+function generateProfile() {
+  const d = data;
+  return {
+    '自己紹介': genIntro(d),
+    'リベ大との出会い': genEncounter(d),
+    '挑戦・実践していること': genChallenge(d),
+    '趣味・特技': genHobbies(d),
+    '好きな〇〇': genFavorites(d),
+    'イチオシのリベ大コンテンツ': genContent(d),
+    'その他ご自由にどうぞ': genOther(d),
+  };
+}
+
+function genIntro(d) {
+  const p = [];
+  if (d.goal) p.push('🎯 ' + d.goal);
+  if (d.currentWork) p.push('\n📌 今やっていること\n' + d.currentWork);
+  if (d.challenges) p.push('\n💭 悩み・課題\n' + d.challenges);
+  if (d.libecityGoal) p.push('\n🤝 リベシティでやりたいこと\n' + d.libecityGoal);
+  return p.join('\n');
+}
+function genEncounter(d) {
+  const p = [];
+  if (d.encounterTrigger) p.push(d.encounterTrigger);
+  if (d.whyJoined) p.push(d.whyJoined);
+  return p.join('\n\n');
+}
+function genChallenge(d) {
+  const p = [];
+  if (d.saving) p.push('💰 貯める力\n' + d.saving);
+  if (d.investing) p.push('📈 増やす力\n' + d.investing);
+  if (d.earning) p.push('💪 稼ぐ力\n' + d.earning);
+  if (d.futureGoals) p.push('🌟 これからやりたいこと\n' + d.futureGoals);
+  return p.join('\n\n');
+}
+function genHobbies(d) {
+  const p = [];
+  if (d.hobbies) p.push('趣味：' + d.hobbies);
+  if (d.skills) p.push('特技：' + d.skills);
+  return p.join('\n');
+}
+function genFavorites(d) {
+  const p = [];
+  if (d.fav1Item) {
+    let s = '好きな' + (d.fav1Type || '好きなもの') + '：' + d.fav1Item;
+    if (d.fav1Why) s += '\n（' + d.fav1Why + '）';
+    p.push(s);
+  }
+  if (d.fav2Item && d.fav2Type && d.fav2Type !== '選択なし') {
+    let s = '好きな' + d.fav2Type + '：' + d.fav2Item;
+    if (d.fav2Why) s += '\n（' + d.fav2Why + '）';
+    p.push(s);
+  }
+  return p.join('\n\n');
+}
+function genContent(d) {
+  const p = [];
+  if (d.favContent) p.push('🎬 ' + d.favContent);
+  if (d.whyContent) p.push(d.whyContent);
+  return p.join('\n\n');
+}
+function genOther(d) {
+  const p = [];
+  if (d.nameOrigin) p.push('【リベネームの由来】\n' + d.nameOrigin);
+  if (d.iconOrigin) p.push('【アイコンの由来】\n' + d.iconOrigin);
+  if (d.strengthFinder) p.push('【ストレングスファインダー】\n' + d.strengthFinder);
+  if (d.connectWith) p.push('【こんな人と友達になりたい！】\n' + d.connectWith);
+  if (d.favoriteChat) p.push('【よくいるチャット】\n' + d.favoriteChat);
+  if (d.otherMessage) p.push(d.otherMessage);
+  return p.join('\n\n');
+}
+
+// ====== WELCOME ======
+// アプリ自身のURL（localhost でも Netlify でも自動対応）
+const APP_ORIGIN = window.location.origin + window.location.pathname.replace(/index\.html$/, '');
+
+// ブックマークレット本体（リベシティ側で実行）
+const BOOKMARKLET_CODE = `javascript:(function(){
+  var d={};
+  document.querySelectorAll('textarea').forEach(function(el,i){d['t'+i]=el.value||'';});
+  document.querySelectorAll('input[type="text"],input:not([type])').forEach(function(el,i){d['i'+i]=el.value||'';});
+  var encoded=btoa(encodeURIComponent(JSON.stringify(d)));
+  window.open('${APP_ORIGIN}?libecity_import='+encoded,'_blank');
+})();`;
+
+function renderWelcome() {
+  document.getElementById('progressWrap').classList.add('hidden');
+  document.getElementById('previewPanel').classList.add('hidden');
+  document.getElementById('mainLayout').style.cssText = 'max-width:540px;margin:0 auto;display:block';
+  document.getElementById('formPanel').innerHTML = `
+    <div style="padding:20px 0">
+      <div class="welcome-hero">
+        <div class="lion">🦁</div>
+        <h2>リベシティ<br>プロフィールビルダー</h2>
+        <p>質問に答えるだけで、ノウハウ図書館の知恵を活かした<br>充実プロフィールが完成します！</p>
+      </div>
+      <div class="welcome-options">
+        <div class="welcome-option featured" onclick="startFresh()">
+          <h3>✨ 最初から作る</h3>
+          <p style="margin-bottom:10px">質問に答えるだけでOK！設定不要、すぐ使えます。</p>
+          <div style="font-size:12px;color:var(--primary-dark);background:rgba(249,115,22,0.1);border-radius:6px;padding:6px 10px;display:inline-block">
+            📋 必要なもの：このアプリだけ
+          </div>
+        </div>
+        <div class="welcome-option" onclick="toggleImport()">
+          <h3>📥 既存のプロフィールを読み込む</h3>
+          <p style="margin-bottom:10px">今リベシティに書いてある内容を自動で取り込んでブラッシュアップできます。</p>
+          <div style="font-size:12px;color:var(--text-muted);background:#f5f5f4;border-radius:6px;padding:6px 10px;display:inline-block">
+            🤖 必要なもの：Claude Code ＋ リベシティにログイン済み
+          </div>
+          <div id="importArea" class="paste-area hidden" onclick="event.stopPropagation()">
+            <div style="margin-top:14px;padding:18px;background:white;border-radius:10px;border:1.5px solid var(--primary-light);text-align:center">
+              <div style="font-size:40px;margin-bottom:10px">🤖</div>
+              <p style="font-size:15px;font-weight:700;margin-bottom:12px;color:var(--text)">Claude Codeに話しかけてください</p>
+              <div style="background:var(--primary-light);border-radius:8px;padding:14px;margin-bottom:14px">
+                <p style="font-size:13px;color:var(--text-muted);margin-bottom:6px">Claude Codeのチャット欄に入力：</p>
+                <p style="font-size:18px;font-weight:800;color:var(--primary)">「プロフィールを読み込んで」</p>
+              </div>
+              <div style="font-size:12px;color:var(--text-muted);line-height:2;text-align:left">
+                <div>✅ リベシティのプロフィールを自動で取得</div>
+                <div>✅ このページが自動で更新されます</div>
+                <div>✅ コピペ・ブックマーク一切不要</div>
+              </div>
+              <div style="margin-top:14px;padding:10px;background:#f5f5f4;border-radius:6px;font-size:11px;color:var(--text-muted);text-align:left;line-height:1.8">
+                ⚠️ 事前にリベシティへのログインと<br>
+                　　Claude in Chrome 拡張のインストールが必要です
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:20px;font-size:12px;color:var(--text-muted);line-height:1.7">
+        📚 ノウハウ図書館の人気記事「リベシティプロフィールを<br>『あなたらしい』文章にするコツと例文」をはじめ<br>複数の記事の知恵をもとに作成しました
+      </div>
+    </div>
+  `;
+}
+
+function handleBookmarkletClick(e) {
+  // ブックマークとして使う場合はそのまま（ブラウザがjavascript:リンクとして処理）
+  // 直接クリックされた場合は説明を表示
+  alert('このボタンはブックマークバーにドラッグして使います！\n\n① このボタンをブラウザのブックマークバーにドラッグ\n② リベシティのプロフィール編集ページを開く\n③ ブックマークバーの「📥 リベシティ取込」をクリック');
+  return false;
+}
+
+function toggleImport() { document.getElementById('importArea').classList.toggle('hidden'); }
+
+function startFresh() {
+  data = {};
+  launchWizard();
+}
+
+// リベシティからのデータをアプリのフィールドにマッピング
+function mapLibecityData(raw) {
+  const d = {};
+  // Libecityのtextarea順番（edit_profile_detailページ）：
+  // t0: 自己紹介  t1: リベ大との出会い  t2: 挑戦・実践  t3: 趣味・特技
+  // t4: 好きな〇〇（1つ目）  t5: その他ご自由に
+  if (raw.t0) d.currentWork = raw.t0;          // 自己紹介 → 今やっていること欄へ
+  if (raw.t1) d.encounterTrigger = raw.t1;     // リベ大との出会い
+  if (raw.t2) {
+    // 挑戦・実践は長いので稼ぐ力欄へ（ユーザーが各力に振り分けられる）
+    d.earning = raw.t2;
+  }
+  if (raw.t3) d.hobbies = raw.t3;             // 趣味・特技
+  if (raw.t4) d.fav1Item = raw.t4;            // 好きな〇〇
+  if (raw.t5) d.otherMessage = raw.t5;        // その他ご自由に
+  // input fields: i0=出身地, i1=家族構成（現在のフィールドには対応なし）
+  return d;
+}
+
+function launchWizard() {
+  currentStep = 0;
+  document.getElementById('progressWrap').classList.remove('hidden');
+  document.getElementById('previewPanel').classList.remove('hidden');
+  document.getElementById('mainLayout').style.cssText = 'max-width:1100px;margin:0 auto;display:flex';
+  renderStep(); renderPreview(); updateDots();
+}
+
+// ====== WIZARD ======
+function renderStep() {
+  const s = steps[currentStep];
+  const pct = Math.round((currentStep / steps.length) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = 'ステップ ' + (currentStep + 1) + ' / ' + steps.length;
+  document.getElementById('progressPct').textContent = pct + '%';
+  updateDots();
+
+  const fieldsHtml = s.fields.map(f => {
+    const val = data[f.key] !== undefined ? data[f.key] : '';
+    const opt = f.optional ? '<span class="field-optional">（任意）</span>' : '';
+    const key = f.key;
+    if (f.type === 'textarea') {
+      const h = (f.rows || 3) * 28;
+      return '<div class="field-group">' +
+        (f.label ? '<label class="field-label">' + f.label + ' ' + opt + '</label>' : '') +
+        '<textarea id="field_' + key + '" style="min-height:' + h + 'px" placeholder="' + escAttr(f.placeholder || '') + '" oninput="onInput(\'' + key + '\',this.value)">' + escHtml(val) + '</textarea>' +
+        '<div class="char-count" id="cc_' + key + '">' + val.length + '文字</div>' +
+        '</div>';
+    }
+    if (f.type === 'text') {
+      return '<div class="field-group">' +
+        (f.label ? '<label class="field-label">' + f.label + ' ' + opt + '</label>' : '') +
+        '<input type="text" id="field_' + key + '" value="' + escAttr(val) + '" placeholder="' + escAttr(f.placeholder || '') + '" oninput="onInput(\'' + key + '\',this.value)">' +
+        '</div>';
+    }
+    if (f.type === 'select') {
+      const opts = f.options.map(o => '<option value="' + escAttr(o) + '"' + (val === o ? ' selected' : '') + '>' + escHtml(o) + '</option>').join('');
+      return '<div class="field-group">' +
+        (f.label ? '<label class="field-label">' + f.label + ' ' + opt + '</label>' : '') +
+        '<select id="field_' + key + '" onchange="onInput(\'' + key + '\',this.value)">' + opts + '</select>' +
+        '</div>';
+    }
+    return '';
+  }).join('');
+
+  const isLast = currentStep === steps.length - 1;
+  document.getElementById('formPanel').innerHTML =
+    '<div class="step-card">' +
+    '<div class="step-badge">' + s.badge + ' ' + s.emoji + '</div>' +
+    '<h2 class="step-title">' + s.emoji + ' ' + s.title + '</h2>' +
+    '<p class="step-desc">' + escHtml(s.desc) + '</p>' +
+    '<div class="tip-box"><strong>📚 ノウハウ図書館より</strong>' + escHtml(s.tip) + '</div>' +
+    fieldsHtml +
+    '<div class="nav-buttons">' +
+    (currentStep > 0
+      ? '<button class="btn btn-secondary" onclick="goPrev()">← 戻る</button>'
+      : '<button class="btn btn-secondary" onclick="saveFields();renderWelcome()">← トップに戻る</button>'
+    ) +
+    '<button class="btn btn-primary" onclick="goNext()">' + (isLast ? '🎉 プロフィールを完成させる！' : '次へ →') + '</button>' +
+    '</div>' +
+    '</div>';
+  window.scrollTo(0, 0);
+}
+
+function onInput(key, value) {
+  data[key] = value;
+  const cc = document.getElementById('cc_' + key);
+  if (cc) cc.textContent = value.length + '文字';
+  renderPreview();
+}
+
+function saveFields() {
+  if (currentStep < 0 || currentStep >= steps.length) return;
+  steps[currentStep].fields.forEach(f => {
+    const el = document.getElementById('field_' + f.key);
+    if (el) data[f.key] = el.value;
+  });
+}
+
+function goNext() { saveFields(); if (currentStep >= steps.length - 1) { renderFinal(); } else { currentStep++; renderStep(); renderPreview(); } }
+function goPrev() { saveFields(); if (currentStep > 0) { currentStep--; renderStep(); renderPreview(); } }
+function jumpTo(i) { saveFields(); currentStep = i; if (i >= steps.length) { renderFinal(); } else { renderStep(); renderPreview(); } }
+
+function updateDots() {
+  const el = document.getElementById('stepDots');
+  if (!el) return;
+  el.innerHTML = steps.map((s, i) => {
+    const cls = i < currentStep ? 'done' : (i === currentStep ? 'active' : '');
+    return '<div class="step-dot ' + cls + '" onclick="jumpTo(' + i + ')" title="' + s.title + '">' + (i < currentStep ? '✓' : i + 1) + '</div>';
+  }).join('') + '<div class="step-dot ' + (currentStep >= steps.length ? 'active' : '') + '" onclick="jumpTo(' + steps.length + ')" title="完成🎉">🎉</div>';
+}
+
+// ====== PREVIEW ======
+function renderPreview() {
+  const el = document.getElementById('previewContent');
+  if (!el) return;
+  const sections = generateProfile();
+  el.innerHTML = Object.entries(sections).map(([title, text]) =>
+    '<div class="preview-section">' +
+    '<div class="preview-section-title">' + title + '</div>' +
+    (text.trim()
+      ? '<div class="preview-text">' + escHtml(text) + '</div>'
+      : '<div class="preview-empty">まだ入力されていません</div>'
+    ) +
+    '</div>'
+  ).join('');
+}
+
+// ====== FINAL ======
+function renderFinal() {
+  document.getElementById('progressWrap').classList.add('hidden');
+  document.getElementById('previewPanel').classList.add('hidden');
+  document.getElementById('mainLayout').style.cssText = 'max-width:720px;margin:0 auto;display:block';
+
+  const sections = generateProfile();
+  const outputHtml = Object.entries(sections).map(([title, text], idx) => {
+    const empty = !text.trim();
+    const btnId = 'copybtn_' + idx;
+    const safeText = text.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$/g, '\\$');
+    return '<div class="output-section">' +
+      '<div class="output-header">' +
+      '<span class="output-title">' + title + '</span>' +
+      (!empty ? '<button class="btn-copy" id="' + btnId + '" onclick="doCopy(\'' + btnId + '\', `' + safeText + '`)">📋 コピー</button>' : '') +
+      '</div>' +
+      (empty
+        ? '<div class="output-empty">入力なし（空欄のままでOKです）</div>'
+        : '<div class="output-text">' + escHtml(text) + '</div>'
+      ) +
+      '</div>';
+  }).join('');
+
+  document.getElementById('formPanel').innerHTML =
+    '<div style="padding:20px 0">' +
+    '<div style="text-align:center;margin-bottom:24px">' +
+    '<div style="font-size:48px">🎉</div>' +
+    '<h2 style="font-size:24px;font-weight:800;margin-bottom:8px">プロフィール完成！</h2>' +
+    '<p style="color:var(--text-muted);font-size:14px;line-height:1.6">各セクションをコピーして、リベシティのプロフィール編集ページに貼り付けましょう。</p>' +
+    '<a href="https://libecity.com/mypage/edit_profile_detail" target="_blank" style="display:inline-block;margin-top:12px;background:var(--primary);color:white;padding:10px 22px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px">🦁 リベシティ プロフィール編集を開く →</a>' +
+    '</div>' +
+    outputHtml +
+    '<div class="final-actions">' +
+    '<button class="btn btn-secondary" onclick="backToEdit()">← 編集に戻る</button>' +
+    '<button class="btn btn-primary" onclick="copyAll()">📋 まとめてコピー</button>' +
+    '<button class="btn btn-secondary" onclick="resetAll()" style="margin-left:auto">🔄 最初からやり直す</button>' +
+    '</div>' +
+    '<div style="margin-top:24px;padding:16px;background:var(--primary-light);border-radius:var(--radius);font-size:13px;color:var(--primary-dark);line-height:1.9">' +
+    '<strong>📚 さらに良くするヒント（ノウハウ図書館より）</strong><br>' +
+    '✅ スマホで見る人が多いので改行を多めに入れよう<br>' +
+    '✅ 冒頭3行に「はじめまして」「よろしくお願いします」は書かない（もったいない！）<br>' +
+    '✅ リベネームに書いてある内容は繰り返さない<br>' +
+    '✅ 好きなものは「なぜ好きか」の理由まで書くと個性が出る<br>' +
+    '✅ 少し秘密を残すのもOK。オフ会での話題になります！' +
+    '</div>' +
+    '</div>';
+}
+
+function doCopy(btnId, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.textContent = '✅ コピー済み！';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '📋 コピー'; btn.classList.remove('copied'); }, 2500);
+  });
+}
+
+function copyAll() {
+  const sections = generateProfile();
+  const all = Object.entries(sections).filter(([,t]) => t.trim()).map(([title, t]) => '【' + title + '】\n' + t).join('\n\n---\n\n');
+  navigator.clipboard.writeText(all).then(() => alert('プロフィール全文をコピーしました！\nリベシティのプロフィール編集ページに貼り付けてください。'));
+}
+
+function backToEdit() {
+  currentStep = steps.length - 1;
+  document.getElementById('progressWrap').classList.remove('hidden');
+  document.getElementById('previewPanel').classList.remove('hidden');
+  document.getElementById('mainLayout').style.cssText = 'max-width:1100px;margin:0 auto;display:flex';
+  renderStep(); renderPreview(); updateDots();
+}
+
+function resetAll() {
+  if (confirm('最初からやり直しますか？\n入力内容は消えます。')) { currentStep = -1; data = {}; renderWelcome(); }
+}
+
+// ====== UTILS ======
+function escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>');
+}
+function escAttr(s) { return String(s || '').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+// ====== INIT ======
+(function() {
+  // URLパラメータにlibecity_importがあれば自動取り込み
+  const params = new URLSearchParams(window.location.search);
+  const importParam = params.get('libecity_import');
+  if (importParam) {
+    try {
+      const raw = JSON.parse(decodeURIComponent(atob(importParam)));
+      data = mapLibecityData(raw);
+      // URLをクリーンにしてからウィザードを起動
+      history.replaceState({}, '', window.location.pathname);
+      // 取り込み成功のウェルカム表示を挟む
+      renderImportSuccess(raw);
+      return;
+    } catch(e) {
+      console.error('Import failed:', e);
+    }
+  }
+  renderWelcome();
+})();
+
+function renderImportSuccess(raw) {
+  document.getElementById('progressWrap').classList.add('hidden');
+  document.getElementById('previewPanel').classList.add('hidden');
+  document.getElementById('mainLayout').style.cssText = 'max-width:540px;margin:0 auto;display:block';
+
+  // どのフィールドが取り込まれたか表示
+  const fields = [
+    { key: 't0', label: '自己紹介' },
+    { key: 't1', label: 'リベ大との出会い' },
+    { key: 't2', label: '挑戦・実践していること' },
+    { key: 't3', label: '趣味・特技' },
+    { key: 't4', label: '好きな〇〇' },
+    { key: 't5', label: 'その他ご自由にどうぞ' },
+  ];
+  const importedItems = fields.filter(f => raw[f.key] && raw[f.key].trim()).map(f =>
+    '<li style="padding:4px 0">✅ ' + f.label + '（' + raw[f.key].length + '文字）</li>'
+  ).join('');
+
+  document.getElementById('formPanel').innerHTML = `
+    <div style="padding:20px 0;text-align:center">
+      <div style="font-size:56px;margin-bottom:12px">📥</div>
+      <h2 style="font-size:24px;font-weight:800;margin-bottom:8px">取り込み完了！</h2>
+      <p style="color:var(--text-muted);font-size:14px;line-height:1.7;margin-bottom:20px">
+        リベシティの既存プロフィールを読み込みました。<br>
+        各ステップで内容を確認・編集しながら進めましょう！
+      </p>
+      <div style="background:white;border-radius:var(--radius);border:1px solid var(--border);padding:16px;text-align:left;margin-bottom:24px">
+        <p style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--primary)">📋 取り込んだセクション</p>
+        <ul style="list-style:none;font-size:13px;color:var(--text)">
+          ${importedItems || '<li style="color:var(--text-muted)">データが見つかりませんでした</li>'}
+        </ul>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+          💡 取り込んだ内容は各ステップで編集できます。<br>セクションをまたぐ内容は手動で振り分けてください。
+        </p>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="launchWizard()" style="font-size:16px;padding:14px">
+        🚀 ブラッシュアップを始める！
+      </button>
+      <button class="btn btn-secondary btn-full" onclick="renderWelcome()" style="margin-top:10px;font-size:14px">
+        ← トップに戻る
+      </button>
+    </div>
+  `;
+}
+</script>
+</body>
+</html>
