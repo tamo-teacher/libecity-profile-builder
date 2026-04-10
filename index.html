@@ -555,7 +555,7 @@ function renderStep() {
       const h = (f.rows || 3) * 28;
       return '<div class="field-group">' +
         (f.label ? '<label class="field-label">' + f.label + ' ' + opt + '</label>' : '') +
-        '<textarea id="field_' + key + '" style="min-height:' + h + 'px" placeholder="' + escAttr(f.placeholder || '') + '" oninput="onInput(\'' + key + '\',this.value)">' + escHtml(val) + '</textarea>' +
+        '<textarea id="field_' + key + '" style="min-height:' + h + 'px" placeholder="' + escAttr(f.placeholder || '') + '" oninput="onInput(\'' + key + '\',this.value)"></textarea>' +
         '<div class="char-count" id="cc_' + key + '">' + val.length + '文字</div>' +
         '</div>';
     }
@@ -591,6 +591,13 @@ function renderStep() {
     '<button class="btn btn-primary" onclick="goNext()">' + (isLast ? '🎉 プロフィールを完成させる！' : '次へ →') + '</button>' +
     '</div>' +
     '</div>';
+  // textareaの値をvalueで直接セット（escHtmlを避けるため）
+  s.fields.forEach(f => {
+    if (f.type === 'textarea') {
+      const el = document.getElementById('field_' + f.key);
+      if (el) el.value = data[f.key] !== undefined ? data[f.key] : '';
+    }
+  });
   window.scrollTo(0, 0);
 }
 
